@@ -355,3 +355,8 @@ func (m *mockAppendable) AppendCTZeroSample(_ storage.SeriesRef, _ labels.Labels
 	// AppendCTZeroSample is no-op for remote-write for now.
 	return 0, nil
 }
+
+func (m *mockAppendable) AppendHistogramCTZeroSample(_ storage.SeriesRef, _ labels.Labels, _, _ int64, _ string) (storage.SeriesRef, error) {
+	// AppendHistogramCTZeroSample is no-op for remote-write for now.
+	return 0, nil
+}

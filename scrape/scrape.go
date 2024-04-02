@@ -1638,6 +1638,7 @@ loop:
 			if sl.enableCTZeroIngestion {
 				switch mediaType {
 				case "application/openmetrics-text":
+					// OpenMetrics text format doesn't support CT for histograms.
 					ref, skipCallNextEntry, err = sl.tryAppendOMCTZeroSample(p.(*textparse.OpenMetricsParser), app, string(trimedMetric), ref, lset, t, met)
 					if err != nil && errors.Is(err, io.EOF) {
 						err = nil
@@ -1645,7 +1646,15 @@ loop:
 					}
 				default:
 					if ctMs := p.CreatedTimestamp(); ctMs != nil {
-						ref, err = app.AppendCTZeroSample(ref, lset, t, *ctMs)
+						if isHistogram {
+							if h != nil {
+								ref, err = app.AppendHistogramCTZeroSample(ref, lset, t, *ctMs, "histogram")
+							} else {
+								ref, err = app.AppendHistogramCTZeroSample(ref, lset, t, *ctMs, "float")
+							}
+						} else {
+							ref, err = app.AppendCTZeroSample(ref, lset, t, *ctMs)
+						}
 						if err != nil && !errors.Is(err, storage.ErrOutOfOrderCT) { // OOO is a common case, ignoring completely for now.
 							// CT is an experimental feature. For now, we don't need to fail the
 							// scrape on errors updating the created timestamp, log debug.
