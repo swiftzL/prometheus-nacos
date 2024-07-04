@@ -573,9 +573,23 @@ func funcAvgOverTime(vals []parser.Value, args parser.Expressions, enh *EvalNode
 		return vec, nil
 	}
 	return aggrOverTime(vals, enh, func(s Series) float64 {
-		var mean, count, c float64
+		var (
+			sum, mean, count, c float64
+			incrementalMean     bool
+		)
 		for _, f := range s.Floats {
 			count++
+			if !incrementalMean {
+				newSum, newC := kahanSumInc(f.F, sum, c)
+				if count == 1 || !math.IsInf(newSum, 0) {
+					sum, c = newSum, newC
+					continue
+				}
+				// Handle overflow by reverting to incremental calculation of the mean value.
+				incrementalMean = true
+				mean = sum / (count - 1)
+				c /= count - 1
+			}
 			if math.IsInf(mean, 0) {
 				if math.IsInf(f.F, 0) && (mean > 0) == (f.F > 0) {
 					// The `mean` and `f.F` values are `Inf` of the same sign.  They
@@ -596,11 +610,10 @@ func funcAvgOverTime(vals []parser.Value, args parser.Expressions, enh *EvalNode
 			correctedMean := mean + c
 			mean, c = kahanSumInc(f.F/count-correctedMean/count, mean, c)
 		}
-
-		if math.IsInf(mean, 0) {
-			return mean
+		if incrementalMean {
+			return mean + c
 		}
-		return mean + c
+		return (sum + c) / count
 	}), nil
 }
 
