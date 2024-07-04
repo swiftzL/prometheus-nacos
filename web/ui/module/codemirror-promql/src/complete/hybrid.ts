@@ -21,7 +21,6 @@ import {
   BinaryExpr,
   BoolModifier,
   Div,
-  Duration,
   Eql,
   EqlRegex,
   EqlSingle,
@@ -40,7 +39,6 @@ import {
   Mul,
   Neq,
   NeqRegex,
-  NumberLiteral,
   OffsetExpr,
   Or,
   Pow,
@@ -51,6 +49,7 @@ import {
   SubqueryExpr,
   Unless,
   VectorSelector,
+  NumberDurationLiteral,
   UnquotedLabelMatcher,
   QuotedLabelMatcher,
   QuotedLabelName,
@@ -191,11 +190,11 @@ export function computeStartCompletePosition(node: SyntaxNode, pos: number): num
     start++;
   } else if (
     node.type.id === OffsetExpr ||
-    (node.type.id === NumberLiteral && node.parent?.type.id === 0 && node.parent.parent?.type.id === SubqueryExpr) ||
+    node.type.id === NumberDurationLiteral ||
     (node.type.id === 0 &&
       (node.parent?.type.id === OffsetExpr ||
         node.parent?.type.id === MatrixSelector ||
-        (node.parent?.type.id === SubqueryExpr && containsAtLeastOneChild(node.parent, Duration))))
+        (node.parent?.type.id === SubqueryExpr && containsAtLeastOneChild(node.parent, NumberDurationLiteral))))
   ) {
     start = pos;
   }
@@ -227,14 +226,14 @@ export function analyzeCompletion(state: EditorState, node: SyntaxNode): Context
         // we are likely in the given situation:
         // `metric_name{}[5]`
         // We can also just autocomplete a duration
-        result.push({ kind: ContextKind.Duration });
+        result.push({ kind: ContextKind.Duration }, { kind: ContextKind.Number });
         break;
       }
-      if (node.parent?.type.id === SubqueryExpr && containsAtLeastOneChild(node.parent, Duration)) {
+      if (node.parent?.type.id === SubqueryExpr && containsAtLeastOneChild(node.parent, NumberDurationLiteral)) {
         // we are likely in the given situation:
         //    `rate(foo[5d:5])`
         // so we should autocomplete a duration
-        result.push({ kind: ContextKind.Duration });
+        result.push({ kind: ContextKind.Duration }, { kind: ContextKind.Number });
         break;
       }
       // when we are in the situation 'metric_name !', we have the following tree
@@ -300,8 +299,8 @@ export function analyzeCompletion(state: EditorState, node: SyntaxNode): Context
           break;
         }
       }
-      // As the leaf Identifier is coming for different cases, we have to take a bit time to analyze the tree
-      // in order to know what we have to autocomplete exactly.
+      // As the leaf Identifier is coming for different cases, we have to take time to analyze the tree
+      // to know what we have to autocomplete exactly.
       // Here is some cases:
       // 1. metric_name / ignor --> we should autocomplete the BinOpModifier + metric/function/aggregation
       // 2. sum(http_requests_total{method="GET"} / o) --> BinOpModifier + metric/function/aggregation
@@ -312,36 +311,34 @@ export function analyzeCompletion(state: EditorState, node: SyntaxNode): Context
       //         VectorSelector(Identifier)
       //       )
       //
-      // So the first things to do is to get the `Parent` and to determinate if we are in this configuration.
-      // Otherwise we would just have to autocomplete the metric / function / aggregation.
+      // So the first thing to do is to get the `Parent` and to determinate if we are in this configuration.
+      // Otherwise, we would just have to autocomplete the metric / function / aggregation.
 
       const parent = node.parent?.parent;
       if (!parent) {
-        // this case can be possible if the topNode is not anymore PromQL but MetricName.
+        // This case can be possible if the topNode is not anymore PromQL but MetricName.
         // In this particular case, then we just want to autocomplete the metric
         result.push({ kind: ContextKind.MetricName, metricName: state.sliceDoc(node.from, node.to) });
         break;
       }
       // now we have to know if we have two Expr in the direct children of the `parent`
       const containExprTwice = containsChild(parent, 'Expr', 'Expr');
-      if (containExprTwice) {
-        if (parent.type.id === BinaryExpr && !containsAtLeastOneChild(parent, 0)) {
-          // We are likely in the case 1 or 5
-          result.push(
-            { kind: ContextKind.MetricName, metricName: state.sliceDoc(node.from, node.to) },
-            { kind: ContextKind.Function },
-            { kind: ContextKind.Aggregation },
-            { kind: ContextKind.BinOpModifier },
-            { kind: ContextKind.Number }
-          );
-          // in  case the BinaryExpr is a comparison, we should autocomplete the `bool` keyword. But only if it is not present.
-          // When the `bool` keyword is NOT present, then the expression looks like this:
-          // 			BinaryExpr( ..., Gtr , ... )
-          // When the `bool` keyword is present, then the expression looks like this:
-          //      BinaryExpr( ..., Gtr , BoolModifier(...), ... )
-          if (containsAtLeastOneChild(parent, Eql, Gte, Gtr, Lte, Lss, Neq) && !containsAtLeastOneChild(parent, BoolModifier)) {
-            result.push({ kind: ContextKind.Bool });
-          }
+      if (containExprTwice && parent.type.id === BinaryExpr && !containsAtLeastOneChild(parent, 0)) {
+        // We are likely in the case 1 or 5
+        result.push(
+          { kind: ContextKind.MetricName, metricName: state.sliceDoc(node.from, node.to) },
+          { kind: ContextKind.Function },
+          { kind: ContextKind.Aggregation },
+          { kind: ContextKind.BinOpModifier },
+          { kind: ContextKind.Number }
+        );
+        // In case the BinaryExpr is a comparison, we should autocomplete the `bool` keyword. But only if it is not present.
+        // When the `bool` keyword is NOT present, then the expression looks like this:
+        // 			BinaryExpr( ..., Gtr , ... )
+        // When the `bool` keyword is present, then the expression looks like this:
+        //      BinaryExpr( ..., Gtr , BoolModifier(...), ... )
+        if (containsAtLeastOneChild(parent, Eql, Gte, Gtr, Lte, Lss, Neq) && !containsAtLeastOneChild(parent, BoolModifier)) {
+          result.push({ kind: ContextKind.Bool });
         }
       } else {
         result.push(
@@ -434,24 +431,9 @@ export function analyzeCompletion(state: EditorState, node: SyntaxNode): Context
         result.push({ kind: ContextKind.MetricName, metricName: state.sliceDoc(node.from, node.to).slice(1, -1) });
       }
       break;
-    case NumberLiteral:
-      if (node.parent?.type.id === 0 && node.parent.parent?.type.id === SubqueryExpr) {
-        // Here we are likely in this situation:
-        //     `go[5d:4]`
-        // and we have the given tree:
-        // SubqueryExpr(
-        //   VectorSelector(Identifier),
-        //   Duration, Duration, ⚠(NumberLiteral)
-        // )
-        // So we should continue to autocomplete a duration
-        result.push({ kind: ContextKind.Duration });
-      } else {
-        result.push({ kind: ContextKind.Number });
-      }
-      break;
-    case Duration:
+    case NumberDurationLiteral:
     case OffsetExpr:
-      result.push({ kind: ContextKind.Duration });
+      result.push({ kind: ContextKind.Duration }, { kind: ContextKind.Number });
       break;
     case FunctionCallBody:
       // In this case we are in the given situation:
@@ -509,6 +491,8 @@ export class HybridComplete implements CompleteStrategy {
 
   promQL(context: CompletionContext): Promise<CompletionResult | null> | CompletionResult | null {
     const { state, pos } = context;
+    // In case you would like to print the syntax tree (for debugging purpose), you can do it like that:
+    // console.log(syntaxTree(state).toString())
     const tree = syntaxTree(state).resolve(pos, -1);
     const contexts = analyzeCompletion(state, tree);
     let asyncResult: Promise<Completion[]> = Promise.resolve([]);

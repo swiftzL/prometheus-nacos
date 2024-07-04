@@ -22,7 +22,6 @@ export function walkBackward(node: SyntaxNode | null, exit: number): SyntaxNode 
     }
     node = node.parent;
   }
-  return null;
 }
 
 export function containsAtLeastOneChild(node: SyntaxNode, ...child: (number | string)[]): boolean {
