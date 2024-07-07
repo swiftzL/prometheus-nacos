@@ -82,6 +82,7 @@ import (
 	// Register xds plugin.
 	_ "github.com/prometheus/prometheus/discovery/xds"
 
+	_ "github.com/prometheus/prometheus/discovery/nacos"
 	// Register zookeeper plugin.
 	_ "github.com/prometheus/prometheus/discovery/zookeeper"
 )
