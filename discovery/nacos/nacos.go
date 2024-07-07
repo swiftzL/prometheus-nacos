@@ -8,11 +8,13 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/logger"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/discovery"
 	"github.com/prometheus/prometheus/discovery/targetgroup"
+	"go.uber.org/zap"
 	"strconv"
 	"strings"
 	"time"
@@ -48,7 +50,11 @@ type NacosDiscoverer struct {
 }
 
 func (n *NacosDiscoverer) Run(ctx context.Context, up chan<- []*targetgroup.Group) {
-	n.logger.Log("start run the nacos discover")
+	zapLoggerConfig := zap.NewProductionConfig()
+	zapLogger, _ := zapLoggerConfig.Build(zap.AddCaller(), zap.AddCallerSkip(1))
+	logger.SetLogger(&logger.NacosLogger{zapLogger.Sugar()})
+	logger.Infof("start run the nacos discover")
+
 	select {
 	case <-ctx.Done():
 		return
@@ -61,12 +67,14 @@ func (n *NacosDiscoverer) Run(ctx context.Context, up chan<- []*targetgroup.Grou
 		case <-ctx.Done():
 			ticker.Stop()
 			return
-		case <-ticker.C:
+		default:
+			n.mertric.rpcGetCount.Inc()
 			tg, err := n.LookUpServices()
 			if err != nil {
 				n.logger.Log("look up is error ", err)
 			}
 			up <- tg
+			<-ticker.C
 		}
 
 	}
