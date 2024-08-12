@@ -3,21 +3,22 @@ package nacos
 import (
 	"context"
 	"errors"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/logger"
+	model2 "github.com/nacos-group/nacos-sdk-go/v2/model"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/discovery"
 	"github.com/prometheus/prometheus/discovery/targetgroup"
 	"go.uber.org/zap"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func init() {
 
 type SDConfig struct {
 	Server          string   `yaml:"server,omitempty"`
-	NameSpace       string   `yaml:"nameSpace,omitempty"`
+	NameSpaces      []string `yaml:"namespaces,omitempty"`
 	Services        []string `yaml:"services"`
 	RefreshInterval int64    `yaml:"refresh_interval"`
 	Debug           bool     `yaml:"debug"`
@@ -45,7 +46,7 @@ func (c *SDConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type NacosDiscoverer struct {
 	config  SDConfig
 	logger  log.Logger
-	client  naming_client.INamingClient
+	clients []naming_client.INamingClient
 	mertric *NacosMertrics
 }
 
@@ -60,7 +61,6 @@ func (n *NacosDiscoverer) Run(ctx context.Context, up chan<- []*targetgroup.Grou
 		return
 	default:
 	}
-	level.Info(n.logger).Log("start run nacos discover")
 	for {
 		ticker := time.NewTicker(time.Second * time.Duration(n.config.RefreshInterval))
 		select {
@@ -68,51 +68,73 @@ func (n *NacosDiscoverer) Run(ctx context.Context, up chan<- []*targetgroup.Grou
 			ticker.Stop()
 			return
 		default:
+
 			n.mertric.rpcGetCount.Inc()
 			tg, err := n.LookUpServices()
 			if err != nil {
 				n.logger.Log("look up is error ", err)
 			}
-			up <- tg
+			if tg != nil {
+				logger.Info("look up size is ", len(tg.Targets))
+				up <- []*targetgroup.Group{tg}
+			}
+
 			<-ticker.C
 		}
 
 	}
 }
 
-func (n *NacosDiscoverer) LookUpServices() ([]*targetgroup.Group, error) {
+func (n *NacosDiscoverer) LookUpServices() (*targetgroup.Group, error) {
 	if n.config.Debug {
-		n.logger.Log("start lookup services")
+		n.logger.Log("start lookup services", n.config.Services)
 	}
-	res := make([]*targetgroup.Group, 0, len(n.config.Services))
+	targets := make([]model.LabelSet, 0, 10)
 	for _, service := range n.config.Services {
-		service_group, err := n.LookUpService(service)
-		if err != nil {
-			return nil, err
+		if n.config.Debug {
+			logger.Infof("start lookup services", service)
 		}
-		res = append(res, service_group)
+		for _, client := range n.clients {
+			err := n.LookUpService(service, client, &targets)
+			if err != nil {
+				logger.Infof("add service error ", err)
+				return nil, err
+			}
+		}
 	}
-	return res, nil
+	return &targetgroup.Group{Source: "nacos", Targets: targets}, nil
 
 }
 
-func (n *NacosDiscoverer) LookUpService(serviceName string) (*targetgroup.Group, error) {
-	serviceRes, err := n.client.GetService(vo.GetServiceParam{ServiceName: serviceName})
+func (n *NacosDiscoverer) LookUpService(serviceName string, client naming_client.INamingClient, targets *[]model.LabelSet) error {
+	serviceRes, err := client.GetService(vo.GetServiceParam{ServiceName: serviceName})
 	if err != nil {
 		if n.config.Debug {
 			n.logger.Log("lookup server is error")
 		}
-		return nil, err
+		return err
 	}
-	res := &targetgroup.Group{Source: serviceName}
+
 	for _, host := range serviceRes.Hosts {
-		labels := model.LabelSet{
-			model.AddressLabel: model.LabelValue(host.Ip + ":" + strconv.Itoa(int(host.Port))),
-			"instanceId":       model.LabelValue(host.InstanceId),
+		port_str, ok := host.Metadata["metric_port"]
+		if !ok {
+			continue
 		}
-		res.Targets = append(res.Targets, labels)
+		port, err := strconv.Atoi(port_str)
+		if err != nil || port <= 0 {
+			continue
+		}
+		labels := model.LabelSet{
+			model.AddressLabel: model.LabelValue(host.Ip + ":" + port_str),
+			"instanceId":       model.LabelValue(host.InstanceId),
+			"serviceName":      model.LabelValue(serviceName),
+		}
+		if n.config.Debug {
+			logger.Infof("add service ", serviceName, host.Ip)
+		}
+		*targets = append(*targets, labels)
 	}
-	return res, nil
+	return err
 }
 
 func (S SDConfig) Name() string {
@@ -143,17 +165,37 @@ func (S SDConfig) NewDiscoverer(options discovery.DiscovererOptions) (discovery.
 			constant.WithContextPath("/nacos"),
 		),
 	}
-	namingClient, err := clients.NewNamingClient(
-		vo.NacosClientParam{
-			ClientConfig:  nil,
-			ServerConfigs: serverConfigs,
-		},
-	)
-	if err != nil {
-		return nil, err
+	for _, nameSpaceId := range S.NameSpaces {
+		namingClient, err := clients.NewNamingClient(
+			vo.NacosClientParam{
+				ClientConfig: &constant.ClientConfig{
+					NamespaceId:          nameSpaceId,
+					NotLoadCacheAtStart:  true,
+					UpdateCacheWhenEmpty: true,
+				},
+				ServerConfigs: serverConfigs,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+		dis.clients = append(dis.clients, namingClient)
 	}
-	dis.client = namingClient
+
 	dis.mertric = nacos_metrics
+	for _, serviceName := range dis.config.Services {
+		for _, client := range dis.clients {
+			err = client.Subscribe(&vo.SubscribeParam{
+				ServiceName: serviceName,
+				SubscribeCallback: func(services []model2.Instance, err error) {
+					dis.logger.Log("serveice subscribe size:{}", serviceName, len(services), err)
+				},
+			})
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 	return dis, nil
 }
 

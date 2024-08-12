@@ -1,0 +1,86 @@
+ts=2024-07-10T08:53:52.586Z caller=main.go:601 level=info msg="No time or size retention was set so using the default time retention" duration=15d
+ts=2024-07-10T08:53:52.586Z caller=main.go:645 level=info msg="Starting Prometheus Server" mode=server version="(version=2.53.0, branch=main, revision=6e0e6b5a25c12584b9dc6f74bf619b1227d5a901)"
+ts=2024-07-10T08:53:52.586Z caller=main.go:650 level=info build_context="(go=go1.22.2, platform=linux/amd64, user=root@zl, date=20240708-07:30:30, tags=netgo,builtinassets,stringlabels)"
+ts=2024-07-10T08:53:52.586Z caller=main.go:651 level=info host_details="(Linux 6.8.0-36-generic #36-Ubuntu SMP PREEMPT_DYNAMIC Mon Jun 10 10:49:14 UTC 2024 x86_64 zl (none))"
+ts=2024-07-10T08:53:52.586Z caller=main.go:652 level=info fd_limits="(soft=1048576, hard=1048576)"
+ts=2024-07-10T08:53:52.586Z caller=main.go:653 level=info vm_limits="(soft=unlimited, hard=unlimited)"
+ts=2024-07-10T08:53:52.588Z caller=web.go:571 level=info component=web msg="Start listening for connections" address=0.0.0.0:9090
+ts=2024-07-10T08:53:52.590Z caller=main.go:1160 level=info msg="Starting TSDB ..."
+ts=2024-07-10T08:53:52.595Z caller=tls_config.go:313 level=info component=web msg="Listening on" address=[::]:9090
+ts=2024-07-10T08:53:52.595Z caller=tls_config.go:316 level=info component=web msg="TLS is disabled." http2=false address=[::]:9090
+ts=2024-07-10T08:53:52.597Z caller=head.go:626 level=info component=tsdb msg="Replaying on-disk memory mappable chunks if any"
+ts=2024-07-10T08:53:52.597Z caller=head.go:713 level=info component=tsdb msg="On-disk memory mappable chunks replay completed" duration=8.962µs
+ts=2024-07-10T08:53:52.597Z caller=head.go:721 level=info component=tsdb msg="Replaying WAL, this may take a while"
+ts=2024-07-10T08:53:52.597Z caller=head.go:793 level=info component=tsdb msg="WAL segment loaded" segment=0 maxSegment=4
+ts=2024-07-10T08:53:52.597Z caller=head.go:793 level=info component=tsdb msg="WAL segment loaded" segment=1 maxSegment=4
+ts=2024-07-10T08:53:52.600Z caller=head.go:793 level=info component=tsdb msg="WAL segment loaded" segment=2 maxSegment=4
+ts=2024-07-10T08:53:52.600Z caller=head.go:793 level=info component=tsdb msg="WAL segment loaded" segment=3 maxSegment=4
+ts=2024-07-10T08:53:52.600Z caller=head.go:793 level=info component=tsdb msg="WAL segment loaded" segment=4 maxSegment=4
+ts=2024-07-10T08:53:52.600Z caller=head.go:830 level=info component=tsdb msg="WAL replay completed" checkpoint_replay_duration=40.233µs wal_replay_duration=3.329834ms wbl_replay_duration=130ns chunk_snapshot_load_duration=0s mmap_chunk_replay_duration=8.962µs total_replay_duration=3.421221ms
+ts=2024-07-10T08:53:52.604Z caller=main.go:1181 level=info fs_type=EXT4_SUPER_MAGIC
+ts=2024-07-10T08:53:52.604Z caller=main.go:1184 level=info msg="TSDB started"
+ts=2024-07-10T08:53:52.604Z caller=main.go:1367 level=info msg="Loading configuration file" filename=prometheus.yml
+2024-07-10T08:53:52.605Z	[34mINFO[0m	cache/disk_cache.go:97	finish loading name cache, total: 2
+2024-07-10T08:53:52.605Z	[34mINFO[0m	naming_http/push_receiver.go:89	udp server start, port: 55313
+2024-07-10T08:53:52.605Z	[34mINFO[0m	rpc/rpc_client.go:157	init rpc client for name %!(EXTRA string=819ff66f-4978-479d-9865-6ccf46280612)
+2024-07-10T08:53:52.605Z	[34mINFO[0m	rpc/rpc_client.go:166	get app conn labels from client config map[] 
+2024-07-10T08:53:52.605Z	[34mINFO[0m	rpc/rpc_client.go:168	get app conn labels from env map[] 
+2024-07-10T08:53:52.605Z	[34mINFO[0m	rpc/rpc_client.go:171	final app conn labels : map[] 
+2024-07-10T08:53:52.605Z	[35mDEBUG[0m	rpc/rpc_client.go:393	819ff66f-4978-479d-9865-6ccf46280612 register server push request:ConnectResetRequest handler:ConnectResetRequestHandler
+2024-07-10T08:53:52.605Z	[35mDEBUG[0m	rpc/rpc_client.go:393	819ff66f-4978-479d-9865-6ccf46280612 register server push request:ClientDetectionRequest handler:ClientDetectionRequestHandler
+2024-07-10T08:53:52.605Z	[34mINFO[0m	rpc/rpc_client.go:327	[RpcClient.Start] 819ff66f-4978-479d-9865-6ccf46280612 try to connect to server on start up, server: {serverIp:192.168.254.253 serverPort:8848 serverGrpcPort:9848}
+2024-07-10T08:53:52.605Z	[34mINFO[0m	rpc/grpc_client.go:175	check tls config %!(EXTRA *constant.TLSConfig=&{false false false    })
+2024-07-10T08:53:52.605Z	[34mINFO[0m	rpc/grpc_client.go:180	try to get tls config from env
+2024-07-10T08:53:52.605Z	[34mINFO[0m	rpc/grpc_client.go:189	 tls config from env is not enable
+2024-07-10T08:53:52.606Z	[34mINFO[0m	util/common.go:96	Local IP:192.168.5.184
+2024-07-10T08:53:52.712Z	[34mINFO[0m	rpc/rpc_client.go:337	819ff66f-4978-479d-9865-6ccf46280612 success to connect to server {serverIp:192.168.254.253 serverPort:8848 serverGrpcPort:9848} on start up, connectionId=1720688046594_192.168.6.6_46428
+2024-07-10T08:53:52.712Z	[35mDEBUG[0m	rpc/rpc_client.go:393	819ff66f-4978-479d-9865-6ccf46280612 register server push request:NotifySubscriberRequest handler:NamingPushRequestHandler
+2024-07-10T08:53:52.712Z	[35mDEBUG[0m	rpc/rpc_client.go:401	819ff66f-4978-479d-9865-6ccf46280612 register connection listener [*naming_grpc.ConnectionEventListener] to current client
+ts=2024-07-10T08:53:52.712Z caller=main.go:1404 level=info msg="updated GOGC" old=100 new=75
+ts=2024-07-10T08:53:52.712Z caller=main.go:1415 level=info msg="Completed loading of configuration file" filename=prometheus.yml totalDuration=108.48564ms db_storage=746ns remote_storage=1.803µs web_handler=500ns query_engine=900ns scrape=196.527µs scrape_sd=107.934402ms notify=57.935µs notify_sd=10.898µs rules=1.593µs tracing=7.154µs
+{"level":"info","ts":1720601632.7130473,"caller":"nacos/nacos.go:56","msg":"start run the nacos discover"}
+ts=2024-07-10T08:53:52.713Z caller=main.go:1145 level=info msg="Server is ready to receive web requests."
+ts=2024-07-10T08:53:52.713Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:53:52.713Z caller=manager.go:164 level=info component="rule manager" msg="Starting rule manager..."
+ts=2024-07-10T08:54:07.714Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:54:09.647Z caller=compact.go:580 level=info component=tsdb msg="write block" mint=1720441059619 maxt=1720447200000 ulid=01J2DXK8EXM1JS8XD6JT0Z6Z50 duration=18.37479ms ooo=false
+ts=2024-07-10T08:54:09.649Z caller=head.go:1355 level=info component=tsdb msg="Head GC completed" caller=truncateMemory duration=1.412803ms
+ts=2024-07-10T08:54:09.650Z caller=checkpoint.go:101 level=info component=tsdb msg="Creating checkpoint" from_segment=0 to_segment=2 mint=1720447200000
+ts=2024-07-10T08:54:09.659Z caller=head.go:1317 level=info component=tsdb msg="WAL checkpoint complete" first=0 last=2 duration=9.400286ms
+ts=2024-07-10T08:54:22.715Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:54:37.716Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:54:52.717Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:55:07.718Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:55:22.719Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:55:37.719Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:55:52.720Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:56:07.720Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:56:22.720Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:56:37.721Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:56:52.721Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:57:07.722Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:57:22.724Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:57:37.724Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:57:52.725Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:58:07.726Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:58:22.726Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:58:37.727Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:58:52.728Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:59:07.729Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:59:22.731Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:59:37.731Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T08:59:52.732Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:00:07.732Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:00:22.732Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:00:37.732Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:00:52.733Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:01:07.733Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:01:22.734Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:01:37.735Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:01:52.735Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:02:07.736Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:02:22.737Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:02:37.737Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:02:52.738Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:03:07.739Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
+ts=2024-07-10T09:03:22.739Z caller=nacos.go:85 component="discovery manager scrape" discovery=nacos config=prometheus-nacos startlookupservices=(MISSING)
